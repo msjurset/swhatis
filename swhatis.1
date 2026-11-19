@@ -1,0 +1,83 @@
+.TH SWHATIS 1 "November 2026" "swhatis 0.1.0" "User Commands"
+.SH NAME
+swhatis \- concurrent multi-source command & package identifier
+.SH SYNOPSIS
+.B swhatis
+[\fB\-w\fR]
+[\fB\-ai\fR]
+[\fB\-no-cache\fR]
+[\fB\-no-help\fR]
+[\fB\-json\fR]
+[\fB\-auth\fR [\fIREF_OR_KEY\fR]]
+[\fB\-clear-auth\fR]
+[\fB\-op-ref\fR \fIREF\fR]
+[\fB\-completion\fR \fISHELL\fR]
+[\fB\-version\fR]
+\fIcommand\fR [\fIcommand...\fR]
+.SH DESCRIPTION
+.B swhatis
+is a zero-dependency Go CLI that identifies executables, packages, and scripts in single-digit milliseconds by running concurrent local probes across:
+.IP \[bu] 2
+Executable path & symlink resolution (\fB$PATH\fR -> \fBCellar\fR / \fBuv\fR / \fBpipx\fR / \fBnpm\fR)
+.IP \[bu] 2
+Compiled Go binary module & compiler introspection (\fBdebug/buildinfo\fR)
+.IP \[bu] 2
+Script shebang (\fB#!\fR) and virtual environment package detection
+.IP \[bu] 2
+Zero-subprocess Homebrew Cellar receipt (\fB.brew/<formula>.rb\fR) and Homebrew local API byte-offset index (\fB~/Library/Caches/Homebrew/api/internal/packages.*.jws.json.payload.index\fR or \fB~/.cache/Homebrew/api/...\fR) for both installed and uninstalled formulae/casks
+.IP \[bu] 2
+Zero-subprocess manual page parser (\fB.SH NAME\fR and BSD mdoc \fB.Nd\fR) with \fB/usr/bin/whatis\fR fallback
+.IP \[bu] 2
+Fast \fB\-\-help\fR first-line description scraping on local man/brew miss
+.PP
+When local probes miss (or when \fB\-w\fR or \fB\-ai\fR is passed), \fBswhatis\fR falls back to a 30-day disk cache, GitHub/PyPI/npm package registries, \fBcheat.sh\fR, and optional search-grounded Google Gemini (\fBgoogle_search\fR tool) authenticated via environment variable (\fBGEMINI_API_KEY\fR), system keychain, or 1Password CLI (\fBop://\fR biometric prompt).
+.SH OPTIONS
+.TP
+.B \-w
+Force web/registry/search lookup even when local man or Homebrew info exists.
+.TP
+.B \-ai
+Force a search-grounded Gemini summary using an API key from system keychain, \fBGEMINI_API_KEY\fR, or 1Password CLI.
+.TP
+.B \-no-cache
+Bypass the 30-day local disk cache.
+.TP
+.B \-no-help
+Skip running \fB<command> \-\-help\fR when man and Homebrew descriptions are absent.
+.TP
+.B \-json
+Output structured JSON including timing and all probe fields.
+.TP
+.B \-auth
+Resolve a Gemini API key (from \fB\-op-ref\fR, positional argument, \fBGEMINI_OP_REF\fR, \fBGEMINI_API_KEY\fR, or 1Password CLI biometric prompt) and cache it in the system keychain under service \fBswhatis\fR.
+.TP
+.B \-clear-auth
+Delete the cached Gemini API key from the system keychain.
+.TP
+.BI \-op-ref " REF"
+Specify a custom 1Password secret reference (e.g., \fBop://Vault/Item/credential\fR) or API key for \fB\-auth\fR or \fB\-ai\fR.
+.TP
+.BI \-completion " SHELL"
+Print shell completion script for \fBzsh\fR or \fBbash\fR.
+.TP
+.B \-version
+Print version and exit.
+.SH ENVIRONMENT
+.TP
+.B GEMINI_API_KEY
+Google Gemini API key (or \fBop://\fR reference) for optional search-grounded AI summaries.
+.TP
+.B GEMINI_OP_REF
+Custom 1Password \fBop://\fR secret reference for Gemini API key resolution.
+.TP
+.B GITHUB_TOKEN
+Optional GitHub personal access token for higher rate limits on Go binary repository lookups.
+.SH FILES
+.TP
+.I ~/Library/Caches/swhatis/<command>.json
+Cached remote/AI descriptions on macOS (\fB~/.cache/swhatis/\fR on Linux, 30-day TTL).
+.TP
+.I ~/Library/Caches/Homebrew/api/internal/packages.*.jws.json.payload.index
+Homebrew local API byte-offset index used for sub-millisecond uninstalled formula and cask lookups.
+.SH AUTHOR
+Mark Sjurseth

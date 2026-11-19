@@ -1,0 +1,23 @@
+#compdef swhatis
+
+_swhatis() {
+  local context state state_descr line
+  typeset -A opt_args
+
+  _arguments -C \
+    '-w[Force web/search lookup even if local info exists]' \
+    '-ai[Force search-grounded Gemini summary via 1Password/Keychain]' \
+    '-no-cache[Bypass local web summary cache]' \
+    '-no-help[Skip --help first-line fallback probe]' \
+    '-json[Output structured JSON]' \
+    '(- *)-auth[Authenticate with 1Password and cache Gemini API key in Keychain]' \
+    '(- *)-clear-auth[Remove cached Gemini API key from Keychain]' \
+    '-op-ref[1Password op:// reference for Gemini API key]:op reference:' \
+    '(- *)-completion[Print shell completion script]:shell:(zsh bash)' \
+    '(- *)-version[Print version and exit]' \
+    '(- *)-h[Show help]' \
+    '(- *)--help[Show help]' \
+    '*:command:_command_names -e'
+}
+
+_swhatis "$@"
