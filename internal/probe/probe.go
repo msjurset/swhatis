@@ -1029,6 +1029,7 @@ func FetchCheatSh(parent context.Context, cmd string) string {
 // GroundedModelChain defines the paid-tier search-grounded model chain.
 // Fast failover with zero multi-pass sleep loops.
 var GroundedModelChain = []string{
+	"gemini-4-hydrogen",
 	"gemini-2.5-flash",
 	"gemini-3.1-pro-preview",
 }
@@ -1069,12 +1070,22 @@ func FetchGeminiGrounded(parent context.Context, cmd string, local Result, opRef
 			{"google_search": map[string]any{}},
 		},
 	}
-	bodyBytes, err := json.Marshal(reqBody)
-	if err != nil {
-		return "", ""
-	}
-
 	for _, model := range GroundedModelChain {
+		modelReq := map[string]any{
+			"contents": reqBody["contents"],
+			"tools":    reqBody["tools"],
+		}
+		if strings.Contains(model, "gemini-4-") {
+			modelReq["generationConfig"] = map[string]any{
+				"thinkingConfig": map[string]any{
+					"thinkingLevel": "LOW",
+				},
+			}
+		}
+		bodyBytes, err := json.Marshal(modelReq)
+		if err != nil {
+			continue
+		}
 		if text := callGeminiModel(parent, apiKey, model, bodyBytes); text != "" {
 			return text, model
 		}
